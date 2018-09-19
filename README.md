@@ -16,7 +16,7 @@ the following shape:
 				
 (s/def ::count (s/or :number   nat-int?
                      :keyword  keyword?
-                     :function fn?)
+                     :function fn?))
 
 (s/def ::as keyword?)
 
