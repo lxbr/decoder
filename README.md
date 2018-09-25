@@ -65,7 +65,7 @@ an existing buffer and therefore write operations to either are visible in both.
 
 Given a buffer, frames indexed by name and the name of the root frame, the `decode` function
 returns a (potentially nested) map of decoded data. To automatically transform decoded
-values another map can be passed that maps transformation names to functions.
+values, another map can be passed that maps transformation names to functions.
 
 ``` clojure
 (let [bytes  (byte-array [13 72 101 108 108 111 44 32 119 111 114 108 100 33])
