@@ -9,13 +9,15 @@ of maps where each map describes a parse step. Each parse step has
 the following shape:
 
 ``` clojure
-(s/def ::type (s/or :primitive #{:byte  :ubyte
+(s/def ::type (s/or :primitive #{:int8  :uint8
                                  :int16 :uint16
-                                 :int32 :uint32}
+                                 :int32 :uint32
+                                 :int64 :uint64}
                     :custom keyword?))
-				
+
 (s/def ::count (s/or :number   nat-int?
                      :keyword  keyword?
+                     :vector   (s/coll-of keyword? :kind vector?)
                      :function fn?))
 
 (s/def ::as keyword?)
@@ -36,14 +38,14 @@ Individual frames are combined into a map indexed by name:
 
 ## Buffers
 
-Buffers wrap byte arrays and provide read/write functionality for 1, 2 and 4 byte values.
+Buffers wrap byte arrays and provide read/write functionality for 1, 2, 4 and 8 byte values.
 Existing byte arrays can be wrapped or new buffers allocated. The endianness is provided
 at construction time, `:le` for little and `:be` for big endian order.
 
 ``` clojure
 (let [bytes  (byte-array [1 2 3 4])
       buffer (wrap-bytes bytes :be)] ;; a buffer of 4 bytes in big endian order
-  (identical? bytes (unwrap-bytes buffer)) ;; => true
+  (identical? bytes (unwrap-bytes buffer))) ;; => true
 
 (byte-buffer 100 :le) ;; a buffer of 100 bytes in little endian order
 ```
@@ -56,8 +58,8 @@ an existing buffer and therefore write operations to either are visible in both.
       slice-a (slice buffer 0 4)
       slice-b (slice buffer 4 4)]
   (dotimes [i 4]
-    (put-byte slice-a i i)
-    (put-byte slice-b i i))
+    (put-int8 slice-a i i)
+    (put-int8 slice-b i i))
   (vec (unwrap-bytes buffer))) ;; => [0 1 2 3 0 1 2 3]
 ```
 
@@ -72,10 +74,10 @@ values, another map can be passed that maps transformation names to functions.
       buffer (wrap-bytes bytes :be)
       root-frame [
 
-                  {:type :byte
+                  {:type :int8
                    :as   :length}
 
-                  {:type  :byte
+                  {:type  :int8
                    :count :length
                    :as    :value
                    :f     :string}

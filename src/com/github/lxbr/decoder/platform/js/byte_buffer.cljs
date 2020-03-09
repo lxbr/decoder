@@ -35,11 +35,11 @@
       (js/DataView. (.-buffer (.-data-view buffer)) (+ offset position) length)
       (.-little-endian buffer)))))
 
-(defn get-byte
+(defn get-int8
   [buffer position]
   (.getInt8 (.-data-view buffer) position))
 
-(defn get-ubyte
+(defn get-uint8
   [buffer position]
   (.getUint8 (.-data-view buffer) position))
 
@@ -59,7 +59,15 @@
   [buffer position]
   (.getUint32 (.-data-view buffer) position (.-little-endian buffer)))
 
-(defn put-byte
+(defn get-int64
+  [buffer position]
+  (.getBigInt64 (.-data-view buffer) position (.-little-endian buffer)))
+
+(defn get-uint64
+  [buffer position]
+  (.getBigUint64 (.-data-view buffer) position (.-little-endian buffer)))
+
+(defn put-int8
   [buffer position value]
   (.setUint8 (.-data-view buffer) position (bit-and 0xff value)))
 
@@ -70,3 +78,47 @@
 (defn put-int32
   [buffer position value]
   (.setUint32 (.-data-view buffer) position (bit-and 0xffffffff value) (.-little-endian buffer)))
+
+(defn put-int64
+  [buffer position value]
+  (.setBigUint64 (.-data-view buffer) position (bit-and 0xffffffffffffffff value) (.-little-endian buffer)))
+
+(defn int8-array
+  [buffer]
+  (let [view (.-data-view buffer)]
+    (js/Int8Array. (.-buffer view) (.-byteOffset view))))
+
+(defn uint8-array
+  [buffer]
+  (let [view (.-data-view buffer)]
+    (js/Uint8Array. (.-buffer view) (.-byteOffset view))))
+
+(defn int16-array
+  [buffer]
+  (let [view (.-data-view buffer)]
+    (js/Int16Array. (.-buffer view) (.-byteOffset view))))
+
+(defn uint16-array
+  [buffer]
+  (let [view (.-data-view buffer)]
+    (js/Uint16Array. (.-buffer view) (.-byteOffset view))))
+
+(defn int32-array
+  [buffer]
+  (let [view (.-data-view buffer)]
+    (js/Int32Array. (.-buffer view) (.-byteOffset view))))
+
+(defn uint32-array
+  [buffer]
+  (let [view (.-data-view buffer)]
+    (js/Uint32Array. (.-buffer view) (.-byteOffset view))))
+
+(defn int64-array
+  [buffer]
+  (let [view (.-data-view buffer)]
+    (js/BigInt64Array. (.-buffer view) (.-byteOffset view))))
+
+(defn uint64-array
+  [buffer]
+  (let [view (.-data-view buffer)]
+    (js/BigUint64Array. (.-buffer view) (.-byteOffset view))))

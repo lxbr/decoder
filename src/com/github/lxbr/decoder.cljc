@@ -20,32 +20,36 @@
                   cnt   :count} (first frame)]
          (let [cnt' (cond
                       (keyword? cnt) (some cnt (rseq (conj context result)))
+                      (vector? cnt)  (some #(get-in % cnt) (rseq (conj context result)))
                       (fn? cnt)      (cnt (conj context result))
                       :else          cnt)
                xf   (get transforms f identity)]
            (if (some? cnt')
              (let [values (case tag
-                            (:byte  :ubyte)
+                            :int8
                             (when (some? as)
-                              (->> (range pos (+ pos cnt'))
-                                   (map #(bb/get-byte buffer %))
-                                   #?(:clj  (byte-array)
-                                      :cljs (into-array))
-                                   #?(:cljs (js/Uint8Array.))))
-                            (:int16  :uint16)
+                              (bb/int8-array (bb/slice buffer pos cnt')))
+                            :uint8
                             (when (some? as)
-                              (->> (range pos (+ pos (* 2 cnt')) 2)
-                                   (map #(bb/get-int16 buffer %))
-                                   #?(:clj  (short-array)
-                                      :cljs (into-array))
-                                   #?(:cljs (js/Uint16Array.))))
-                            (:int32  :uint32)
+                              (bb/uint8-array (bb/slice buffer pos cnt')))
+                            :int16
                             (when (some? as)
-                              (->> (range pos (+ pos (* 4 cnt')) 4)
-                                   (map #(bb/get-int32 buffer %))
-                                   #?(:clj  (int-array)
-                                      :cljs (into-array))
-                                   #?(:cljs (js/Uint32Array.))))
+                              (bb/int16-array (bb/slice buffer pos (* 2 cnt'))))
+                            :uint16
+                            (when (some? as)
+                              (bb/uint16-array (bb/slice buffer pos (* 2 cnt'))))
+                            :int32
+                            (when (some? as)
+                              (bb/int32-array (bb/slice buffer pos (* 4 cnt'))))
+                            :uint32
+                            (when (some? as)
+                              (bb/uint32-array (bb/slice buffer pos (* 4 cnt'))))
+                            :int64
+                            (when (some? as)
+                              (bb/int64-array (bb/slice buffer pos (* 8 cnt'))))
+                            :uint64
+                            (when (some? as)
+                              (bb/uint64-array (bb/slice buffer pos (* 8 cnt'))))
                             (let [ctx (conj context result)]
                               (loop [i    0
                                      pos' pos
@@ -57,26 +61,30 @@
                                     (recur (inc i) (+ pos' len) (conj ret value)))
                                   ret))))
                    length (case tag
-                            (:byte  :ubyte)  (* 1 cnt')
+                            (:int8  :uint8)  (* 1 cnt')
                             (:int16 :uint16) (* 2 cnt')
                             (:int32 :uint32) (* 4 cnt')
+                            (:int64 :uint64) (* 8 cnt')
                             (transduce (map (comp ::byte-count meta)) + 0 values))]
                (->> (cond-> result
                       (some? as) (assoc as (xf values)))
                     (recur (+ pos (long length)) (next frame))))
              (let [value  (case tag
-                            :byte   (bb/get-byte   buffer pos)
-                            :ubyte  (bb/get-ubyte  buffer pos)
+                            :int8   (bb/get-int8   buffer pos)
+                            :uint8  (bb/get-uint8  buffer pos)
                             :int16  (bb/get-int16  buffer pos)
                             :uint16 (bb/get-uint16 buffer pos)
                             :int32  (bb/get-int32  buffer pos)
                             :uint32 (bb/get-uint32 buffer pos)
+                            :int64  (bb/get-int64  buffer pos)
+                            :uint64 (bb/get-uint64 buffer pos)
                             (->> (conj context result)
                                  (decode-at pos buffer frames tag transforms)))
                    length (case tag
-                            (:byte  :ubyte)  1
+                            (:int8  :uint8)  1
                             (:int16 :uint16) 2
                             (:int32 :uint32) 4
+                            (:int64 :uint64) 8
                             (::byte-count (meta value)))]
                (->> (cond-> result
                       (some? as) (assoc as (xf value)))

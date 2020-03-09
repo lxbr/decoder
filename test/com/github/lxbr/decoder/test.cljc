@@ -14,19 +14,19 @@
                              (into-array)))
         length (alength bytes)
         buffer (bb/byte-buffer (inc length) :le)]
-    (bb/put-byte buffer 0 length)
+    (bb/put-int8 buffer 0 length)
     (dotimes [i (alength bytes)]
-      (bb/put-byte buffer (inc i) (aget bytes i)))
+      (bb/put-int8 buffer (inc i) (aget bytes i)))
     (is (= {:length length :string string}
            (dec/decode
             buffer
             {:var-length-string
              [
 
-              {:type :ubyte
+              {:type :uint8
                :as   :length}
               
-              {:type  :byte
+              {:type  :int8
                :count :length
                :as    :string
                :f     :to-string}
@@ -69,10 +69,10 @@
                 {:tree
                  [
 
-                  {:type :byte
+                  {:type :int8
                    :as   :value}
 
-                  {:type :byte
+                  {:type :int8
                    :as   :child-count}
 
                   {:type  :tree
@@ -93,6 +93,19 @@
                   (reduce + 2)))))))
 
 (deftest endianness
+  (testing "int64"
+    (let [value     (unchecked-long 0xdeadbeefcafebabe)
+          buffer-le (bb/byte-buffer 8 :le)
+          buffer-be (bb/byte-buffer 8 :be)]
+      (bb/put-int64 buffer-le 0 value)
+      (bb/put-int64 buffer-be 0 value)
+      (is (= value
+             (bb/get-uint64 buffer-le 0)
+             (bb/get-uint64 buffer-be 0)))
+      (is (= (#?(:clj unchecked-long :cljs long) value)
+             (bb/get-int64 buffer-le 0)
+             (bb/get-int64 buffer-be 0)))))
+
   (testing "int32"
     (let [value     0xdeadbeef
           buffer-le (bb/byte-buffer 4 :le)
@@ -163,20 +176,20 @@
         data   [72 101 108 108 111 44 32 119 111 114 108 100 33]
         offset 37
         slice  (bb/slice buffer (inc offset) (count data))]
-    (bb/put-byte buffer 0 offset)
-    (bb/put-byte buffer offset (count data))
+    (bb/put-int8 buffer 0 offset)
+    (bb/put-int8 buffer offset (count data))
     (dotimes [i (count data)]
-      (bb/put-byte slice i (nth data i)))
+      (bb/put-int8 slice i (nth data i)))
     (let [{:keys [data]}
           (dec/decode
            buffer
            {:header
             [
 
-             {:type :ubyte
+             {:type :uint8
               :as   :offset}
 
-             {:type  :byte
+             {:type  :int8
               :count (fn [context]
                        (dec (some :offset context)))}
 
@@ -187,10 +200,10 @@
             :data
             [
 
-             {:type :byte
+             {:type :int8
               :as   :length}
 
-             {:type :byte
+             {:type :int8
               :count :length
               :as :value
               :f :string}
@@ -209,7 +222,7 @@
   (let [frames {:root
                 [
 
-                 {:type  :byte
+                 {:type  :int8
                   :count 10
                   :as    :bytes
                   :f     :vector}
@@ -224,16 +237,23 @@
                   :as    :ints
                   :f     :vector}
 
+                 {:type  :int64
+                  :count 10
+                  :as    :longs
+                  :f     :vector}
+
                  ]}
         xforms {:vector #?(:clj vec :cljs (comp vec array-seq))}
-        buffer (bb/byte-buffer (+ 10 (* 2 10) (* 4 10)) :be)]
+        buffer (bb/byte-buffer (+ 10 (* 2 10) (* 4 10) (* 8 10)) :be)]
     (dotimes [i 10]
-      (bb/put-byte buffer i i)
+      (bb/put-int8  buffer i i)
       (bb/put-int16 buffer (+ 10 (* 2 i)) i)
-      (bb/put-int32 buffer (+ 10 (* 2 10) (* 4 i)) i))
+      (bb/put-int32 buffer (+ 10 (* 2 10) (* 4 i)) i)
+      (bb/put-int64 buffer (+ 10 (* 2 10) (* 4 10) (* 8 i)) i))
     (is (= {:bytes  (range 10)
             :shorts (range 10)
-            :ints   (range 10)}
+            :ints   (range 10)
+            :longs  (range 10)}
            (dec/decode buffer frames :root xforms)))))
 
 (comment

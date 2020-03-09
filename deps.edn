@@ -1,9 +1,1 @@
-{:paths ["src"]
- :aliases
- {:repl {:extra-deps {compliment {:mvn/version "0.3.6"}
-                      com.github.lxbr/cljs-complete
-                      {:git/url "https://github.com/lxbr/cljs-complete"
-                       :sha "0cf498e61e33aeacdad928a6e90b7a4fdc8b1d18"}
-                      org.clojure/clojurescript {:mvn/version "1.10.339"}}
-         :extra-paths ["dev" "test"]
-         :jvm-opts ["-Dclojure.server.repl={:port,3450,:accept,clojure.core.server/repl}"]}}}
+{:paths ["src"]}
