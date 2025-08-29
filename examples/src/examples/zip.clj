@@ -21,7 +21,7 @@
     {:type :zip/local-file-header
      :as   :header}
 
-    {:type  :byte
+    {:type  :uint8
      :count [:header :compressed-size]
      :as    :data}
 
@@ -60,12 +60,12 @@
      :as   :extra-field-length}
 
     ;; file name (variable size)
-    {:type  :byte
+    {:type  :uint8
      :count :file-name-length
      :as    :file-name
      :f     :string}
     ;; extra field (variable size)
-    {:type  :byte
+    {:type  :uint8
      :count :extra-field-length}
 
     ]})
