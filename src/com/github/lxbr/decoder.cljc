@@ -25,7 +25,8 @@
                       :else          cnt)
                xf   (get transforms f identity)]
            (if (some? cnt')
-             (let [values (case tag
+             (let [cnt' (long cnt')
+                   values (case tag
                             :int8
                             (when (some? as)
                               (bb/int8-array (bb/slice buffer pos cnt')))
@@ -89,7 +90,7 @@
                (->> (cond-> result
                       (some? as) (assoc as (xf value)))
                     (recur (+ pos (long length)) (next frame))))))
-         (with-meta result {::byte-count (- pos position)}))))))
+         (with-meta result {::byte-count (- pos (long position))}))))))
 
 (defn decode
   ([buffer frames root-frame]
