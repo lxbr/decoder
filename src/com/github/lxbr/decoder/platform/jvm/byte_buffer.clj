@@ -78,7 +78,7 @@
 
 (defn put-int8
   [^ByteBuffer buffer ^long position ^long value]
-  (.put buffer position value))
+  (.put buffer (int position) (unchecked-byte value)))
 
 (defn put-int16
   [^ByteBuffer buffer ^long position ^long value]
